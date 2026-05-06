@@ -1,4 +1,4 @@
-# NORVIEW-AI-PROJECT
+# norview_ai
 
 An AI-powered project built with FastAPI and Google Generative AI.
 
@@ -17,8 +17,8 @@ An AI-powered project built with FastAPI and Google Generative AI.
 
 **Windows & Linux:**
 
-    git clone https://github.com/zianimedtaha-netizen/NORVIEW-AI-PROJECT.git
-    cd NORVIEW-AI-PROJECT
+    git clone https://github.com/zianimedtaha-netizen/norview_ai.git
+    cd norview_ai
 
 ### 2. Install dependencies
 
@@ -56,7 +56,7 @@ Open `front_end/index.html` in your browser.
 
 ## Project Structure
 
-    NORVIEW-AI-PROJECT/
+    norview_ai/
     ├── back_end/
     │   ├── main.py
     │   └── token_guard_agent.py
