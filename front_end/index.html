@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NorView AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green-dark:#0a3d2b; --green-mid:#0f5c40; --green-main:#16a363; --green-light:#22c97a;
+      --off-white:#f7f9f8; --gray-100:#eef1ef; --gray-200:#d8ddd9; --gray-400:#8fa495;
+      --gray-600:#4a5e54; --text-dark:#0d1f18; --pink:#e8356d;
+      --shadow-soft:0 4px 24px rgba(10,61,43,.10); --shadow-strong:0 8px 48px rgba(10,61,43,.18);
+      --radius-sm:8px; --radius-md:16px; --radius-lg:24px; --radius-xl:32px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'DM Sans',sans-serif;background:var(--off-white);min-height:100vh}
+
+    /* ── PORTAL ── */
+    .portal-nav{background:var(--green-dark);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 2px 16px rgba(0,0,0,.2)}
+    .portal-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:white}
+    .portal-logo span{color:var(--green-light)}
+    .portal-user{display:flex;align-items:center;gap:10px;color:var(--gray-200);font-size:14px}
+    .portal-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green-main),var(--green-light));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:white}
+    .portal-body{padding:32px;max-width:1100px;margin:0 auto}
+    .portal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:var(--text-dark);margin-bottom:20px}
+    .portal-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+    .portal-card{background:white;border-radius:var(--radius-md);padding:20px;box-shadow:var(--shadow-soft);border:1px solid var(--gray-100);transition:transform .2s,box-shadow .2s;cursor:pointer}
+    .portal-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-strong)}
+    .portal-card-icon{font-size:24px;margin-bottom:10px}
+    .portal-card-label{font-family:'Syne',sans-serif;font-weight:600;font-size:13px;color:var(--text-dark);margin-bottom:4px}
+    .portal-card-sub{font-size:12px;color:var(--gray-400)}
+
+    /* ── CHAT BUTTON ── */
+    #chatButton{position:fixed;bottom:28px;right:28px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--green-main),var(--green-light));border:none;cursor:pointer;box-shadow:0 4px 20px rgba(22,163,99,.45);display:flex;align-items:center;justify-content:center;z-index:1000;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s}
+    #chatButton:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(22,163,99,.55)}
+    #chatButton svg{width:24px;height:24px;fill:white}
+
+    /* ── CHAT BOX ── */
+    #chatBox{position:fixed;bottom:100px;right:28px;width:380px;height:580px;background:white;border-radius:var(--radius-xl);box-shadow:0 16px 64px rgba(13,79,79,.22),0 2px 8px rgba(10,61,43,.08);display:none;flex-direction:column;z-index:999;overflow:hidden;border:1px solid rgba(19,101,64,.12)}
+    .chat-open{animation:slideUp .35s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+    /* ── HEADER ── */
+    #chatHeader{background:linear-gradient(135deg,var(--green-dark) 0%,var(--green-mid) 100%);padding:18px 20px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;overflow:hidden}
+    #chatHeader::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04)}
+    .header-left{display:flex;align-items:center;gap:12px}
+    .nor-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--green-main),var(--green-light));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:white;box-shadow:0 0 0 2px rgba(255,255,255,.2);flex-shrink:0}
+    .header-name{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:white;line-height:1.2}
+    .header-status{display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.65);margin-top:2px}
+    .status-dot{width:6px;height:6px;border-radius:50%;background:var(--green-light);box-shadow:0 0 6px var(--green-light);animation:blink-dot 2s ease-in-out infinite}
+    .status-dot.offline{background:#e8356d;box-shadow:0 0 6px #e8356d;animation:none}
+    @keyframes blink-dot{0%,100%{opacity:1}50%{opacity:.4}}
+    .header-close{background:rgba(255,255,255,.1);border:none;cursor:pointer;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);font-size:16px;transition:background .2s;z-index:1}
+    .header-close:hover{background:rgba(255,255,255,.2);color:white}
+
+    /* ── MESSAGES ── */
+    .messages-wrapper{flex:1;position:relative;overflow:hidden}
+    #messages{height:100%;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:12px;background:var(--off-white);scroll-behavior:smooth}
+    #messages::-webkit-scrollbar{width:4px}
+    #messages::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:4px}
+    #scrollBtn{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:var(--green-dark);color:white;border:none;border-radius:20px;padding:7px 16px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;display:none;align-items:center;gap:5px;box-shadow:0 2px 12px rgba(10,61,43,.35);z-index:10;white-space:nowrap;transition:background .2s;animation:fadeIn .2s ease}
+    #scrollBtn:hover{background:var(--green-mid);transform:translateX(-50%) translateY(-1px)}
+    #scrollBtn svg{width:12px;height:12px;fill:white}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    /* ── MESSAGE ROWS ── */
+    .msg-row{display:flex;gap:8px;align-items:flex-end;animation:msgIn .3s ease-out}
+    .msg-row.user{flex-direction:row-reverse}
+    @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .msg-avatar-sm{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--green-main),var(--green-light));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:white;flex-shrink:0}
+    .msg-name{font-size:10px;font-weight:600;color:var(--gray-400);margin-bottom:3px;letter-spacing:.3px;text-transform:uppercase}
+    .msg-bubble{max-width:80%;padding:10px 14px;border-radius:var(--radius-md);font-size:13.5px;line-height:1.6;color:var(--text-dark)}
+    .msg-bubble.nor{background:white;border-radius:4px var(--radius-md) var(--radius-md) var(--radius-md);box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid var(--gray-100)}
+    .msg-bubble.user{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));color:white;border-radius:var(--radius-md) 4px var(--radius-md) var(--radius-md);box-shadow:0 2px 8px rgba(10,61,43,.25)}
+
+    /* ── TICKET CONFIRMATION CARD ── */
+    .ticket-confirmation{background:white;border:1.5px solid var(--green-main);border-radius:var(--radius-md);padding:16px;max-width:280px;display:flex;flex-direction:column;gap:10px;box-shadow:0 2px 12px rgba(22,163,99,.12)}
+    .ticket-confirmation-header{display:flex;align-items:center;gap:8px}
+    .ticket-check{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green-main),var(--green-light));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .ticket-check svg{width:16px;height:16px;fill:white}
+    .ticket-confirmation-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--green-dark)}
+    .ticket-confirmation-title span{display:block;font-family:'DM Sans',sans-serif;font-weight:400;font-size:11px;color:var(--gray-400);margin-top:2px}
+    .ticket-id-box{background:var(--off-white);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .ticket-id-label{font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.4px}
+    .ticket-id-value{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--green-dark);letter-spacing:.5px}
+    .ticket-copy-btn{background:none;border:none;cursor:pointer;color:var(--green-main);font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;padding:4px 8px;border-radius:4px;transition:background .15s}
+    .ticket-copy-btn:hover{background:var(--gray-100)}
+    .ticket-email-line{font-size:12px;color:var(--gray-600);line-height:1.5}
+    .ticket-email-line strong{color:var(--green-dark)}
+
+    /* ── TYPING ── */
+    #typing-row{display:flex;gap:8px;align-items:flex-end;animation:msgIn .3s ease-out}
+    .typing-bubble{background:white;border:1px solid var(--gray-100);border-radius:4px var(--radius-md) var(--radius-md) var(--radius-md);padding:12px 16px;display:flex;gap:4px;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+    .typing-dot{width:6px;height:6px;border-radius:50%;background:var(--green-main);animation:typingAnim 1.2s ease-in-out infinite}
+    .typing-dot:nth-child(2){animation-delay:.2s}
+    .typing-dot:nth-child(3){animation-delay:.4s}
+    @keyframes typingAnim{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+    /* ── TICKET TRIGGER BUTTON ── */
+    .ticket-trigger-btn{align-self:flex-start;margin-left:36px;background:white;border:1.5px solid var(--green-main);color:var(--green-mid);border-radius:var(--radius-sm);padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .2s,color .2s,transform .15s;box-shadow:0 1px 4px rgba(22,163,99,.1)}
+    .ticket-trigger-btn:hover{background:var(--green-main);color:white;transform:translateY(-1px)}
+
+    /* ── RATING ── */
+    .rating-widget{align-self:flex-start;margin-left:36px;background:white;border:1px solid var(--gray-100);border-radius:var(--radius-md);padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:8px;animation:msgIn .3s ease-out;max-width:220px}
+    .rating-label{font-size:11.5px;color:var(--gray-400);font-weight:500}
+    .rating-stars{display:flex;gap:4px}
+    .star-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-200);transition:color .15s,transform .15s;padding:2px;line-height:1}
+    .star-btn:hover,.star-btn.active{color:#f5a623;transform:scale(1.2)}
+    .rating-feedback-area{display:none;flex-direction:column;gap:6px}
+    .rating-feedback-area textarea{border:1.5px solid var(--gray-100);border-radius:var(--radius-sm);padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:12.5px;resize:none;height:55px;outline:none;color:var(--text-dark);background:var(--off-white)}
+    .rating-feedback-area textarea:focus{border-color:var(--green-main)}
+    .rating-submit{background:var(--green-main);color:white;border:none;border-radius:var(--radius-sm);padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;align-self:flex-end;transition:background .2s}
+    .rating-submit:hover{background:var(--green-mid)}
+
+    /* ── INPUT ── */
+    #inputArea{padding:12px 14px;background:white;border-top:1px solid var(--gray-100);display:flex;align-items:center;gap:10px;flex-shrink:0}
+    #userInput{flex:1;border:1.5px solid var(--gray-100);border-radius:var(--radius-md);padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--text-dark);background:var(--off-white);outline:none;transition:border-color .2s,background .2s}
+    #userInput::placeholder{color:var(--gray-400)}
+    #userInput:focus{border-color:var(--green-main);background:white}
+    #sendBtn{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--green-main),var(--green-light));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 10px rgba(22,163,99,.35);transition:transform .2s}
+    #sendBtn:hover{transform:scale(1.08)}
+    #sendBtn svg{width:16px;height:16px;fill:white}
+
+    /* ── TICKET MODAL ── */
+    .ticket-overlay{position:fixed;inset:0;background:rgba(10,31,24,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:2000;animation:fadeIn .2s ease}
+    .ticket-modal{background:white;border-radius:var(--radius-xl);width:90%;max-width:420px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(10,31,24,.35);animation:modalIn .3s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .ticket-modal-header{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));padding:22px 24px 18px;border-radius:var(--radius-xl) var(--radius-xl) 0 0;display:flex;align-items:center;justify-content:space-between}
+    .ticket-modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:white}
+    .ticket-modal-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+    .modal-close{background:rgba(255,255,255,.1);border:none;cursor:pointer;width:30px;height:30px;border-radius:50%;color:rgba(255,255,255,.7);font-size:16px;display:flex;align-items:center;justify-content:center}
+    .modal-close:hover{background:rgba(255,255,255,.2);color:white}
+    .ticket-modal-body{padding:22px 24px;display:flex;flex-direction:column;gap:14px}
+    .field-group{display:flex;flex-direction:column;gap:5px}
+    .field-label{font-size:11.5px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.5px}
+    .field-input{padding:10px 13px;border:1.5px solid var(--gray-100);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--text-dark);background:var(--off-white);outline:none;transition:border-color .2s,background .2s}
+    .field-input:focus{border-color:var(--green-main);background:white}
+    .field-input.error{border-color:var(--pink);background:#fff5f8}
+    .field-error{font-size:11px;color:var(--pink);display:none;font-weight:500}
+    .ticket-modal-footer{padding:0 24px 22px;display:flex;gap:10px}
+    .btn-cancel{flex:1;padding:11px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);background:white;color:var(--gray-600);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;transition:border-color .2s}
+    .btn-cancel:hover{border-color:var(--gray-400)}
+    .btn-submit{flex:2;padding:11px;border:none;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--green-main),var(--green-light));color:white;font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(22,163,99,.3);transition:transform .2s,box-shadow .2s}
+    .btn-submit:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(22,163,99,.4)}
+    .btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+    /* ── MOBILE ── */
+    @media(max-width:480px){
+      #chatBox{width:calc(100vw - 24px);height:calc(100vh - 110px);bottom:86px;right:12px;border-radius:var(--radius-lg)}
+      #chatButton{bottom:20px;right:16px}
+      .portal-body{padding:16px}
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="portal-nav">
+    <div class="portal-logo">EMSI <span>Portal</span></div>
+    <div class="portal-user"><div class="portal-avatar">ST</div>Welcome, Student</div>
+  </nav>
+
+  <div class="portal-body">
+    <div class="portal-title">Dashboard</div>
+    <div class="portal-cards">
+      <div class="portal-card"><div class="portal-card-icon">📅</div><div class="portal-card-label">Schedule</div><div class="portal-card-sub">Next: Math — 9:00 AM</div></div>
+      <div class="portal-card"><div class="portal-card-icon">📊</div><div class="portal-card-label">Grades</div><div class="portal-card-sub">Average: 14.5 / 20</div></div>
+      <div class="portal-card"><div class="portal-card-icon">📢</div><div class="portal-card-label">Announcements</div><div class="portal-card-sub">Exams start April 10</div></div>
+      <div class="portal-card"><div class="portal-card-icon">📄</div><div class="portal-card-label">Documents</div><div class="portal-card-sub">Attestation available</div></div>
+    </div>
+  </div>
+
+  <button id="chatButton">
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+  </button>
+
+  <div id="chatBox">
+    <div id="chatHeader">
+      <div class="header-left">
+        <div class="nor-avatar">N</div>
+        <div>
+          <div class="header-name">NorView AI</div>
+          <div class="header-status" id="headerStatus"><span class="status-dot"></span> Online · EMSI Assistant</div>
+        </div>
+      </div>
+      <button class="header-close" id="closeBtn">✕</button>
+    </div>
+
+    <div class="messages-wrapper">
+      <div id="messages">
+        <div class="msg-row">
+          <div class="msg-avatar-sm">N</div>
+          <div>
+            <div class="msg-name">Nor</div>
+            <div class="msg-bubble nor">Hi! I'm Nor, your EMSI assistant. How can I help you today? 👋</div>
+          </div>
+        </div>
+      </div>
+      <button id="scrollBtn" onclick="scrollToBottom()">
+        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        New messages
+      </button>
+    </div>
+
+    <div id="inputArea">
+      <input id="userInput" placeholder="Ask Nor anything…" autocomplete="off" />
+      <button id="sendBtn">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const chatButton = document.getElementById("chatButton");
+    const chatBox    = document.getElementById("chatBox");
+    const closeBtn   = document.getElementById("closeBtn");
+    const messagesEl = document.getElementById("messages");
+    const scrollBtn  = document.getElementById("scrollBtn");
+    const API_URL    = "http://127.0.0.1:8000";
+
+    let currentTicketBtn = null;
+    let isOpen           = false;
+    let selectedRating   = 0;
+    let submittingTicket = false;
+
+    // ── SERVER STATUS ──
+    async function checkServerStatus() {
+      const status = document.getElementById("headerStatus");
+      try {
+        const res = await fetch(`${API_URL}/api/status`, { signal: AbortSignal.timeout(3000) });
+        if (res.ok) {
+          status.innerHTML = `<span class="status-dot"></span> Online · EMSI Assistant`;
+        }
+      } catch {
+        status.innerHTML = `<span class="status-dot offline"></span> Offline · Server not running`;
+      }
+    }
+    checkServerStatus();
+    setInterval(checkServerStatus, 60000);
+
+    // ── OPEN / CLOSE ──
+    chatButton.onclick = () => {
+      isOpen = !isOpen;
+      if (isOpen) {
+        chatBox.style.display = "flex";
+        chatBox.classList.add("chat-open");
+        setTimeout(() => chatBox.classList.remove("chat-open"), 400);
+        document.getElementById("userInput").focus();
+      } else {
+        chatBox.style.display = "none";
+      }
+    };
+    closeBtn.onclick = () => { isOpen = false; chatBox.style.display = "none"; };
+
+    // ── SCROLL ──
+    function scrollToBottom() {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      scrollBtn.style.display = "none";
+    }
+    messagesEl.addEventListener("scroll", () => {
+      const isAtBottom = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 60;
+      scrollBtn.style.display = isAtBottom ? "none" : "flex";
+    });
+
+    // ── INPUT ──
+    document.getElementById("sendBtn").onclick = sendMessage;
+    document.getElementById("userInput").addEventListener("keypress", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    // ── FORMAT ──
+    function formatMessage(text) {
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>');
+    }
+
+    // ── TICKET CONFIRMATION CARD ──
+    function createTicketConfirmationCard(ticketId, email) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "msg-row";
+      wrapper.innerHTML = `
+        <div class="msg-avatar-sm">N</div>
+        <div>
+          <div class="msg-name">Nor</div>
+          <div class="ticket-confirmation">
+            <div class="ticket-confirmation-header">
+              <div class="ticket-check">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </div>
+              <div class="ticket-confirmation-title">
+                Ticket Submitted Successfully!
+                <span>Your request has been received</span>
+              </div>
+            </div>
+            <div class="ticket-id-box">
+              <div>
+                <div class="ticket-id-label">Ticket ID</div>
+                <div class="ticket-id-value" id="ticketIdDisplay">${ticketId}</div>
+              </div>
+              <button class="ticket-copy-btn" onclick="copyTicketId('${ticketId}')">Copy</button>
+            </div>
+            <div class="ticket-email-line">
+              📧 The support team will contact you at<br>
+              <strong>${email}</strong>
+            </div>
+            <div class="ticket-email-line" style="font-size:11px;color:var(--gray-400)">
+              Keep your Ticket ID as proof of your request.
+            </div>
+          </div>
+        </div>`;
+      return wrapper;
+    }
+
+    function copyTicketId(ticketId) {
+      navigator.clipboard.writeText(ticketId).then(() => {
+        const btn = document.querySelector(".ticket-copy-btn");
+        if (btn) {
+          btn.textContent = "Copied!";
+          btn.style.color = "var(--green-main)";
+          setTimeout(() => { btn.textContent = "Copy"; btn.style.color = ""; }, 2000);
+        }
+      }).catch(() => {});
+    }
+
+    // ── ADD MESSAGE ──
+    function addMsg(text, isUser, needsSupport = false) {
+      const row = document.createElement("div");
+      row.className = "msg-row" + (isUser ? " user" : "");
+
+      const avatar = document.createElement("div");
+      avatar.className = "msg-avatar-sm";
+      avatar.textContent = isUser ? "ST" : "N";
+
+      const content = document.createElement("div");
+      const nameEl = document.createElement("div");
+      nameEl.className = "msg-name";
+      nameEl.textContent = isUser ? "You" : "Nor";
+
+      const bubble = document.createElement("div");
+      bubble.className = "msg-bubble " + (isUser ? "user" : "nor");
+      bubble.innerHTML = isUser ? text : formatMessage(text);
+
+      content.appendChild(nameEl);
+      content.appendChild(bubble);
+      row.appendChild(avatar);
+      row.appendChild(content);
+      messagesEl.appendChild(row);
+
+      if (!isUser && needsSupport) {
+        const btn = document.createElement("button");
+        btn.className = "ticket-trigger-btn";
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg> Submit a Support Ticket`;
+        btn.onclick = () => { currentTicketBtn = btn; showTicketForm(); };
+        messagesEl.appendChild(btn);
+      }
+
+      if (!isUser) {
+        document.getElementById("ratingWidget")?.remove();
+        showRatingWidget();
+      }
+
+      const isAtBottom = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 60;
+      if (isAtBottom) { messagesEl.scrollTop = messagesEl.scrollHeight; scrollBtn.style.display = "none"; }
+      else { scrollBtn.style.display = "flex"; }
+    }
+
+    // ── RATING ──
+    function showRatingWidget() {
+      const widget = document.createElement("div");
+      widget.className = "rating-widget";
+      widget.id = "ratingWidget";
+      widget.innerHTML = `
+        <div class="rating-label">How was this response?</div>
+        <div class="rating-stars">
+          <button class="star-btn" onclick="selectStar(1)">★</button>
+          <button class="star-btn" onclick="selectStar(2)">★</button>
+          <button class="star-btn" onclick="selectStar(3)">★</button>
+          <button class="star-btn" onclick="selectStar(4)">★</button>
+          <button class="star-btn" onclick="selectStar(5)">★</button>
+        </div>
+        <div class="rating-feedback-area" id="ratingFeedback">
+          <textarea id="ratingText" placeholder="Optional: tell us more..."></textarea>
+          <button class="rating-submit" onclick="submitRating()">Send ✓</button>
+        </div>`;
+      messagesEl.appendChild(widget);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function selectStar(star) {
+      selectedRating = star;
+      document.querySelectorAll(".star-btn").forEach((btn, i) => {
+        btn.classList.toggle("active", i < star);
+      });
+      const fb = document.getElementById("ratingFeedback");
+      if (fb) fb.style.display = "flex";
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function submitRating() {
+      const ratingValue   = selectedRating;
+      const feedbackText  = document.getElementById("ratingText")?.value || "";
+      document.getElementById("ratingWidget")?.remove();
+      selectedRating = 0;
+      if (ratingValue === 0) return;
+      try {
+        await fetch(`${API_URL}/api/feedback`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rating: ratingValue, feedback: feedbackText, session_id: "default" })
+        });
+      } catch {}
+    }
+
+    // ── TYPING ──
+    function showTyping() {
+      const row = document.createElement("div");
+      row.id = "typing-row";
+      row.className = "msg-row";
+      row.innerHTML = `<div class="msg-avatar-sm">N</div><div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // ── TICKET FORM ──
+    function showTicketForm() {
+      document.getElementById("ticketForm")?.remove();
+      const overlay = document.createElement("div");
+      overlay.className = "ticket-overlay";
+      overlay.id = "ticketForm";
+      overlay.innerHTML = `
+        <div class="ticket-modal">
+          <div class="ticket-modal-header">
+            <div>
+              <div class="ticket-modal-title">Support Request</div>
+              <div class="ticket-modal-sub">We'll get back to you as soon as possible</div>
+            </div>
+            <button class="modal-close" onclick="closeTicketForm()">✕</button>
+          </div>
+          <div class="ticket-modal-body">
+            <div class="field-group">
+              <label class="field-label">Full Name</label>
+              <input id="t_name" class="field-input" placeholder="Your full name"/>
+              <span id="err_name" class="field-error">Please enter your full name</span>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Email Address</label>
+              <input id="t_email" class="field-input" placeholder="your@email.com" type="email"/>
+              <span id="err_email" class="field-error">Please enter a valid email address</span>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Year of Study</label>
+              <select id="t_year" class="field-input">
+                <option value="">Select your year</option>
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year">2nd Year</option>
+                <option value="3rd Year">3rd Year</option>
+                <option value="4th Year">4th Year</option>
+                <option value="5th Year">5th Year</option>
+              </select>
+              <span id="err_year" class="field-error">Please select your year</span>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Subject</label>
+              <input id="t_subject" class="field-input" placeholder="Brief description of your issue"/>
+              <span id="err_subject" class="field-error">Please enter a subject</span>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Description</label>
+              <textarea id="t_desc" class="field-input" placeholder="Describe your issue in detail..." style="height:90px;resize:none;"></textarea>
+              <span id="err_desc" class="field-error">Please describe your issue in detail</span>
+            </div>
+          </div>
+          <div class="ticket-modal-footer">
+            <button class="btn-cancel" onclick="closeTicketForm()">Cancel</button>
+            <button class="btn-submit" id="submitTicketBtn" onclick="submitTicketForm()">Send Ticket →</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+
+    function closeTicketForm() {
+      document.getElementById("ticketForm")?.remove();
+      submittingTicket = false;
+    }
+
+    // ── SUBMIT TICKET ──
+    async function submitTicketForm() {
+      if (submittingTicket) return;
+
+      const name    = document.getElementById("t_name")?.value || "";
+      const email   = document.getElementById("t_email")?.value || "";
+      const year    = document.getElementById("t_year")?.value || "";
+      const subject = document.getElementById("t_subject")?.value || "";
+      const desc    = document.getElementById("t_desc")?.value || "";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      // Reset errors
+      ["err_name","err_email","err_year","err_subject","err_desc"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+        const inp = document.getElementById(id.replace("err_","t_"));
+        if (inp) inp.classList.remove("error");
+      });
+
+      // Validate
+      let hasError = false;
+      const showErr = (errId, inputId) => {
+        const e = document.getElementById(errId);
+        const i = document.getElementById(inputId);
+        if (e) e.style.display = "block";
+        if (i) i.classList.add("error");
+        hasError = true;
+      };
+      if (!name.trim())                             showErr("err_name",    "t_name");
+      if (!email.trim() || !emailRegex.test(email)) showErr("err_email",   "t_email");
+      if (!year)                                    showErr("err_year",    "t_year");
+      if (!subject.trim())                          showErr("err_subject", "t_subject");
+      if (!desc.trim() || desc.trim().length < 10)  showErr("err_desc",    "t_desc");
+      if (hasError) return;
+
+      // Lock
+      submittingTicket = true;
+      const submitBtn = document.getElementById("submitTicketBtn");
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Sending…"; }
+
+      // Close modal + remove ticket button
+      document.getElementById("ticketForm")?.remove();
+      if (currentTicketBtn) { currentTicketBtn.remove(); currentTicketBtn = null; }
+
+      // Temp loading message with unique ID
+      const tempId = "submitting-msg-" + Date.now();
+      const tempRow = document.createElement("div");
+      tempRow.className = "msg-row";
+      tempRow.id = tempId;
+      tempRow.innerHTML = `
+        <div class="msg-avatar-sm">N</div>
+        <div>
+          <div class="msg-name">Nor</div>
+          <div class="msg-bubble nor">Submitting your ticket…</div>
+        </div>`;
+      messagesEl.appendChild(tempRow);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      try {
+        const response = await fetch(`${API_URL}/api/ticket`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            subject: `[${year}] ${subject}`,
+            description: desc,
+            session_id: "default"
+          })
+        });
+
+        const data = await response.json();
+        const tempEl = document.getElementById(tempId);
+
+        if (tempEl) {
+          // Replace temp message with the beautiful ticket confirmation card
+          const card = createTicketConfirmationCard(data.ticket_id, email);
+          tempEl.replaceWith(card);
+        }
+
+      } catch {
+        const tempEl = document.getElementById(tempId);
+        if (tempEl) {
+          const errRow = document.createElement("div");
+          errRow.className = "msg-row";
+          errRow.innerHTML = `
+            <div class="msg-avatar-sm">N</div>
+            <div>
+              <div class="msg-name">Nor</div>
+              <div class="msg-bubble nor">❌ Failed to submit ticket. Please try again.</div>
+            </div>`;
+          tempEl.replaceWith(errRow);
+        }
+      } finally {
+        submittingTicket = false;
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+    }
+
+    // ── SEND MESSAGE ──
+    async function sendMessage() {
+      const input = document.getElementById("userInput");
+      const message = input.value.trim();
+      if (!message) return;
+
+      document.getElementById("ratingWidget")?.remove();
+      addMsg(message, true);
+      input.value = "";
+      showTyping();
+
+      try {
+        const response = await fetch(`${API_URL}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: message, session_id: "default" })
+        });
+        const data = await response.json();
+        document.getElementById("typing-row")?.remove();
+        addMsg(data.answer, false, data.needs_support);
+      } catch {
+        document.getElementById("typing-row")?.remove();
+        addMsg("Connection error. Make sure the server is running.", false);
+      }
+    }
+  </script>
+</body>
+</html>
