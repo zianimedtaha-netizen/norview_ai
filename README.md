@@ -50,22 +50,35 @@ The server will start at: `http://127.0.0.1:8000`
 
 ### 5. Open the frontend
 
-Open `front_end/index.html` in your browser.
+Open `front_end/index.html` in your browser with liveserver
 
 ---
 
 ## Project Structure
 
     norview_ai/
-    ├── back_end/
-    │   ├── main.py
-    │   └── token_guard_agent.py
-    ├── front_end/
-    │   ├── index.html
-    │   └── javascript.js
-    ├── knowledge_db/
-    ├── .env
-    └── requirements.txt
+├── .venv/
+├── back_end/
+│   ├── __pycache__/
+│   ├── knowledge_db/
+│   ├── anti_hallucination_agent
+│   ├── coordinator_agent.py
+│   ├── knowledge_agent.py
+│   ├── main.py
+│   ├── memory_agent.py
+│   ├── requirements.txt
+│   ├── sentiment_weights.js
+│   ├── sentiments_agent.py
+│   ├── student_feedback.db
+│   ├── ticket_agent.py
+│   ├── tickets.db
+│   └── token_guard_agent.py
+├── front_end/
+│   └── index.html
+├── .env
+├── .gitignore
+├── README.md
+└── requirements.txt 
 
 ---
 
